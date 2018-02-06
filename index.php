@@ -5,17 +5,35 @@ $pdoOptions = [
     PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
 ];
 
-$pdo = new PDO('mysql:host=localhost:3306;dbname=blog', 'root', '', $pdoOptions);
+$pdo = new PDO('mysql:host=localhost;dbname=blog', 'root', '', $pdoOptions);
 
-if(!empty($_POST)){
+function sanitizeValue(&$value)
+{
+    $value = trim(strip_tags($value));
+}
+
+function sanitizeArray(array &$array)
+{
+    array_walk($array, 'sanitizeValue');
+
+}
+
+function sanitizePost()
+{
+    sanitizeArray($_POST);
+    // $_POST et toutes les superglobales sont accessibles dans les fonctions
+}
+
+
+if (!empty($_POST)) {
+    sanitizePost();
     extract($_POST);
-    $query = 'INSERT INTO posts (title, username, message) VALUES (:title, :pseudo, :message)';
+    $query = 'INSERT INTO posts (username, title, message) VALUES (:username, :title, :message)';
     $stmt = $pdo->prepare($query);
-    $stmt->bindParam(':title', $title, PDO::PARAM_STR);
     $stmt->bindParam(':username', $username, PDO::PARAM_STR);
+    $stmt->bindParam(':title', $title, PDO::PARAM_STR);
     $stmt->bindParam(':message', $message, PDO::PARAM_STR);
     $stmt->execute();
-
 }
 
 ?>
